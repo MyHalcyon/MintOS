@@ -74,6 +74,9 @@ case "$1" in
     "prebuilts/samsung/a52qnsxx")
         FIRMWARE="SM-A525F/SER/352938771234569"
         ;;
+    "prebuilts/samsung/a56xnaxx")
+        FIRMWARE="SM-A566B/EUX/352371191234565"
+        ;;
     "prebuilts/samsung/a73xqxx")
         FIRMWARE="SM-A736B/XME/352828291234563"
         ;;
@@ -94,6 +97,9 @@ case "$1" in
         ;;
     "prebuilts/samsung/pa1qxxx")
         FIRMWARE="SM-S931B/EUX/350466671872843"
+        ;;
+    "prebuilts/samsung/pa2qxxx")
+        FIRMWARE="SM-S936B/EUX/350634601234562"
         ;;
     "prebuilts/samsung/r0sxxx")
         FIRMWARE="SM-S901B/EUX/350020271234563"

@@ -37,6 +37,10 @@ jobs:
             path: "prebuilts/samsung/pa1qxxx"
           - module: "Galaxy S22 (r0sxxx)"
             path: "prebuilts/samsung/r0sxxx"
+          - module: "Galaxy A56 5G (a56xnaxx)"
+            path: "prebuilts/samsung/a56xnaxx"
+          - module: "Galaxy S25+ (pa2qxxx)"
+            path: "prebuilts/samsung/pa2qxxx"
 
     steps:
       - name: Checkout repo

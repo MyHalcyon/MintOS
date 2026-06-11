@@ -1,99 +1,158 @@
-From a2430000c32d5d5623fc19a697beec77ad2b1764 Mon Sep 17 00:00:00 2001
-From: Samuel Pascua <pascua.samuel.14@gmail.com>
-Date: Sat, 8 Nov 2025 23:06:34 +0800
-Subject: Add Google Photos unlimited backup
+From c004d8bedb53106da4faf1e31087e9d0f098de9f Mon Sep 17 00:00:00 2001
+From: Salvo Giangreco <giangrecosalvo9@gmail.com>
+Date: Wed, 15 Oct 2025 00:46:38 +0200
+Subject: [PATCH] Allow unlimited storage for Google Photos
 
-Signed-off-by: Samuel Pascua <pascua.samuel.14@gmail.com>
 ---
- .../io/mesalabs/unica/SamsungPropsHooks.smali | 57 ++++++++++++++++++-
- 1 file changed, 56 insertions(+), 1 deletion(-)
+ .../app/ApplicationPackageManager.smali       | 75 ++++++++++++++++---
+ 1 file changed, 66 insertions(+), 9 deletions(-)
 
-diff --git a/smali_classes6/io/mesalabs/unica/SamsungPropsHooks.smali b/smali_classes6/io/mesalabs/unica/SamsungPropsHooks.smali
-index c344ebbc..a738f018 100644
---- a/smali_classes6/io/mesalabs/unica/SamsungPropsHooks.smali
-+++ b/smali_classes6/io/mesalabs/unica/SamsungPropsHooks.smali
-@@ -26,6 +26,8 @@
+diff --git a/smali/android/app/ApplicationPackageManager.smali b/smali/android/app/ApplicationPackageManager.smali
+index b3b5a4dd..57833ded 100644
+--- a/smali/android/app/ApplicationPackageManager.smali
++++ b/smali/android/app/ApplicationPackageManager.smali
+@@ -30,6 +30,8 @@
  
- .field private static final SMART_VIEW_PACKAGE_NAME:Ljava/lang/String; = "com.samsung.android.smartmirroring"
+ .field private static final greylist-max-o DEFAULT_EPHEMERAL_COOKIE_MAX_SIZE_BYTES:I = 0x4000
  
-+.field private static final GPHOTOS_PACKAGE_NAME:Ljava/lang/String; = "com.google.android.apps.photos"
++.field private static final blacklist FEATURES_NEXUS:[Ljava/lang/String;
 +
- .field private static final TAG:Ljava/lang/String; = "SamsungPropsHooks"
+ .field private static final blacklist HAS_SYSTEM_FEATURE_API:Ljava/lang/String; = "has_system_feature"
  
- .field private static volatile sIsUserApp:Z
-@@ -232,7 +234,7 @@
+ .field private static final blacklist LIVE_ICON_SUFFIX:Ljava/lang/String; = ".LiveIconLoader"
+@@ -209,7 +211,7 @@
+ .end method
  
-     move-result v1
+ .method static constructor blacklist <clinit>()V
+-    .locals 5
++    .locals 7
  
--    if-eqz v1, :cond_5
-+    if-eqz v1, :cond_4a
+     new-instance v0, Landroid/util/ArrayMap;
  
-     const-string v1, "TYPE"
+@@ -255,6 +257,22 @@
  
-@@ -242,6 +244,19 @@
+     sput-object v0, Landroid/app/ApplicationPackageManager;->mHasSystemFeatureCache:Landroid/app/PropertyInvalidatedCache;
  
-     goto :goto_4
- 
-+    :cond_4a
-+    const-string v1, "com.google.android.apps.photos"
++    const-string v0, "com.google.android.feature.GOOGLE_BUILD"
 +
-+    invoke-virtual {v0, v1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    const-string v1, "com.google.android.feature.GOOGLE_EXPERIENCE"
++
++    const-string v3, "com.google.android.apps.photos.NEXUS_PRELOAD"
++
++    const-string v5, "com.google.android.apps.photos.nexus_preload"
++
++    const-string v6, "com.google.android.feature.PIXEL_EXPERIENCE"
++
++    filled-new-array {v3, v5, v6, v0, v1}, [Ljava/lang/String;
++
++    move-result-object v0
++
++    sput-object v0, Landroid/app/ApplicationPackageManager;->FEATURES_NEXUS:[Ljava/lang/String;
++
+     new-instance v0, Landroid/app/ApplicationPackageManager$3;
+ 
+     new-instance v1, Landroid/app/PropertyInvalidatedCache$Args;
+@@ -10449,26 +10467,65 @@
+ .end method
+ 
+ .method public whitelist hasSystemFeature(Ljava/lang/String;I)Z
+-    .locals 2
++    .locals 3
+ 
+-    invoke-static {p1}, Lcom/samsung/android/core/pm/mm/MaintenanceModeUtils;->isMaintenanceModeFeature(Ljava/lang/String;)Z
++    invoke-static {}, Landroid/app/ActivityThread;->currentPackageName()Ljava/lang/String;
++
++    move-result-object v0
++
++    if-eqz v0, :cond_0
++
++    const-string/jumbo v1, "persist.sys.unica.gphotos"
++
++    const/4 v2, 0x1
++
++    invoke-static {v1, v2}, Landroid/os/SemSystemProperties;->getBoolean(Ljava/lang/String;Z)Z
 +
 +    move-result v1
 +
-+    if-eqz v1, :cond_5
++    if-eqz v1, :cond_0
 +
-+    invoke-static {}, Lio/mesalabs/unica/SamsungPropsHooks;->spoofAsPixel()V
++    const-string v1, "com.google.android.apps.photos"
 +
-+    goto :goto_4
-+
-     :cond_5
-     sget-boolean v1, Lio/mesalabs/unica/SamsungPropsHooks;->sIsUserApp:Z
++    invoke-virtual {v0, v1}, Ljava/lang/Object;->equals(Ljava/lang/Object;)Z
  
-@@ -551,3 +566,43 @@
+     move-result v0
  
-     return-void
- .end method
+     if-eqz v0, :cond_0
+ 
++    sget-object v0, Landroid/app/ApplicationPackageManager;->FEATURES_NEXUS:[Ljava/lang/String;
 +
-+.method private static spoofAsPixel()V
-+    .locals 2
++    invoke-static {v0}, Ljava/util/Arrays;->asList([Ljava/lang/Object;)Ljava/util/List;
 +
-+    const-string v0, "BRAND"
++    move-result-object v0
 +
-+    const-string v1, "google"
++    invoke-interface {v0, p1}, Ljava/util/List;->contains(Ljava/lang/Object;)Z
 +
-+    invoke-static {v0, v1}, Lio/mesalabs/unica/SamsungPropsHooks;->setBuildField(Ljava/lang/String;Ljava/lang/String;)V
++    move-result v0
 +
-+    const-string v0, "MANUFACTURER"
++    if-eqz v0, :cond_0
 +
-+    const-string v1, "Google"
++    return v2
 +
-+    invoke-static {v0, v1}, Lio/mesalabs/unica/SamsungPropsHooks;->setBuildField(Ljava/lang/String;Ljava/lang/String;)V
++    :cond_0
++    invoke-static {p1}, Lcom/samsung/android/core/pm/mm/MaintenanceModeUtils;->isMaintenanceModeFeature(Ljava/lang/String;)Z
 +
-+    const-string v0, "DEVICE"
++    move-result v0
 +
-+    const-string v1, "marlin"
++    if-eqz v0, :cond_1
 +
-+    invoke-static {v0, v1}, Lio/mesalabs/unica/SamsungPropsHooks;->setBuildField(Ljava/lang/String;Ljava/lang/String;)V
-+
-+    const-string v0, "PRODUCT"
-+
-+    invoke-static {v0, v1}, Lio/mesalabs/unica/SamsungPropsHooks;->setBuildField(Ljava/lang/String;Ljava/lang/String;)V
-+
-+    const-string v0, "MODEL"
-+
-+    const-string v1, "Pixel XL"
-+
-+    invoke-static {v0, v1}, Lio/mesalabs/unica/SamsungPropsHooks;->setBuildField(Ljava/lang/String;Ljava/lang/String;)V
-+
-+    const-string v0, "FINGERPRINT"
-+
-+    const-string v1, "google/marlin/marlin:10/QP1A.191005.007.A3/5972272:user/release-keys"
-+
-+    invoke-static {v0, v1}, Lio/mesalabs/unica/SamsungPropsHooks;->setBuildField(Ljava/lang/String;Ljava/lang/String;)V
-+
-+    return-void
-+.end method
+     invoke-static {}, Lcom/samsung/android/core/pm/mm/MaintenanceModeUtils;->hasSystemFeature()Z
+ 
+     move-result p0
+ 
+     return p0
+ 
+-    :cond_0
++    :cond_1
+     invoke-static {p1, p2}, Lcom/android/internal/pm/RoSystemFeatures;->maybeHasFeature(Ljava/lang/String;I)Ljava/lang/Boolean;
+ 
+     move-result-object v0
+ 
+-    if-eqz v0, :cond_1
++    if-eqz v0, :cond_2
+ 
+     invoke-virtual {v0}, Ljava/lang/Boolean;->booleanValue()Z
+ 
+@@ -10476,10 +10533,10 @@
+ 
+     return p0
+ 
+-    :cond_1
++    :cond_2
+     iget-boolean p0, p0, Landroid/app/ApplicationPackageManager;->mUseSystemFeaturesCache:Z
+ 
+-    if-eqz p0, :cond_2
++    if-eqz p0, :cond_3
+ 
+     invoke-static {}, Landroid/content/pm/SystemFeaturesCache;->getInstance()Landroid/content/pm/SystemFeaturesCache;
+ 
+@@ -10489,7 +10546,7 @@
+ 
+     move-result-object p0
+ 
+-    if-eqz p0, :cond_2
++    if-eqz p0, :cond_3
+ 
+     invoke-virtual {p0}, Ljava/lang/Boolean;->booleanValue()Z
+ 
+@@ -10497,7 +10554,7 @@
+ 
+     return p0
+ 
+-    :cond_2
++    :cond_3
+     sget-object p0, Landroid/app/ApplicationPackageManager;->mHasSystemFeatureCache:Landroid/app/PropertyInvalidatedCache;
+ 
+     new-instance v0, Landroid/app/ApplicationPackageManager$HasSystemFeatureQuery;
 -- 
-2.50.1
+2.51.1
 
